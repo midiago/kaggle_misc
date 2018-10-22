@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+# -*- coding: utf-8 -*-
+
 # Logistic Regression
 
 # Importing the libraries
@@ -89,12 +91,25 @@ train_dataset[['FamilySize', 'Survived']].groupby(['FamilySize'], as_index=False
 for dataset in full_dataset:
     dataset['Sex'] = dataset['Sex'].map( {'female': 1, 'male': 0} ).astype(int)
         
-for dataset in full_dataset:    
-    dataset.loc[ dataset['Age'] <= 14, 'Age'] = 0
-    dataset.loc[(dataset['Age'] > 14) & (dataset['Age'] <= 32), 'Age'] = 1
-    dataset.loc[(dataset['Age'] > 32) & (dataset['Age'] <= 48), 'Age'] = 2
-    dataset.loc[(dataset['Age'] > 48) & (dataset['Age'] <= 64), 'Age'] = 3
-    dataset.loc[ dataset['Age'] > 64, 'Age'] = 4
+#for dataset in full_dataset:    
+#    dataset.loc[ dataset['Age'] <= 7, 'Age'] = 0
+#    dataset.loc[(dataset['Age'] > 7) & (dataset['Age'] <= 14), 'Age'] = 1
+#
+#    dataset.loc[(dataset['Age'] > 14) & (dataset['Age'] <= 24), 'Age'] = 2
+#
+#    dataset.loc[(dataset['Age'] > 24) & (dataset['Age'] <= 32), 'Age'] = 3
+#
+#    dataset.loc[(dataset['Age'] > 32) & (dataset['Age'] <= 48), 'Age'] = 4
+#
+#    dataset.loc[(dataset['Age'] > 48) & (dataset['Age'] <= 56), 'Age'] = 5
+#
+#    dataset.loc[(dataset['Age'] > 56) & (dataset['Age'] <= 64), 'Age'] = 6
+#
+#    dataset.loc[ dataset['Age'] > 64, 'Age'] = 7
+#
+
+
+
 
 for dataset in full_dataset:
     dataset.loc[ dataset['Fare'] <= 7.91, 'Fare'] = 0
@@ -255,92 +270,121 @@ from sklearn.metrics import accuracy_score
 accuracy_score(y_test, y_pred)
 
 
-# Fitting K-NN to the Training set
-from sklearn.neighbors import KNeighborsClassifier
-classifier = KNeighborsClassifier(n_neighbors = 15, metric = 'minkowski', p = 2)
-classifier.fit(X_train, y_train)
+import tensorflow as tf
 
-# Predicting the Test set results
-y_pred = classifier.predict(X_test)
+# Initialize placeholders for data
+n = X.shape[1]
+x = tf.placeholder(dtype=tf.float32, shape=[None, n])
+y = tf.placeholder(dtype=tf.float32, shape=[None, 1])
 
-# Making the Confusion Matrix
-from sklearn.metrics import confusion_matrix
-cm = confusion_matrix(y_test, y_pred)
 
-from sklearn.metrics import accuracy_score
-accuracy_score(y_test, y_pred)
+# number of neurons in each layer
 
+input_num_units = n
+hidden_num_units = 50
+output_num_units = 1
 
 
 
+# Build Neural Network Weights
+initializer = tf.contrib.layers.xavier_initializer()
+weights = {
+    'hidden1': tf.Variable(initializer([input_num_units, hidden_num_units])),
+    'hidden2': tf.Variable(initializer([hidden_num_units, hidden_num_units])),
+    'hidden3': tf.Variable(initializer([hidden_num_units, hidden_num_units])),
+    'output': tf.Variable(initializer([hidden_num_units, output_num_units])),
+}
 
-# Fitting SVM to the Training set
-from sklearn.svm import SVC
-classifier = SVC(kernel = 'rbf', random_state = 0)
-classifier.fit(X_train, y_train)
-
-# Predicting the Test set results
-y_pred = classifier.predict(X_test)
-
-# Making the Confusion Matrix
-from sklearn.metrics import confusion_matrix
-cm = confusion_matrix(y_test, y_pred)
-
-from sklearn.metrics import accuracy_score
-accuracy_score(y_test, y_pred)
-
-
-# Fitting Naive Bayes to the Training set
-from sklearn.naive_bayes import GaussianNB
-classifier = GaussianNB()
-classifier.fit(X_train, y_train)
-
-# Predicting the Test set results
-y_pred = classifier.predict(X_test)
-
-# Making the Confusion Matrix
-from sklearn.metrics import confusion_matrix
-cm = confusion_matrix(y_test, y_pred)
-
-from sklearn.metrics import accuracy_score
-accuracy_score(y_test, y_pred)
+biases = {
+    'hidden1': tf.Variable(initializer([hidden_num_units])),
+    'hidden2': tf.Variable(initializer([hidden_num_units])),
+    'hidden3': tf.Variable(initializer([hidden_num_units])),
+    'output': tf.Variable(initializer([output_num_units])),
+}
 
 
 
-# Fitting Decision Tree Classification to the Training set
-from sklearn.tree import DecisionTreeClassifier
-classifier = DecisionTreeClassifier(criterion = 'entropy', random_state = 0)
-classifier.fit(X_train, y_train)
+# Set hyperparameters
 
-# Predicting the Test set results
-y_pred = classifier.predict(X_test)
-
-# Making the Confusion Matrix
-from sklearn.metrics import confusion_matrix
-cm = confusion_matrix(y_test, y_pred)
-
-from sklearn.metrics import accuracy_score
-accuracy_score(y_test, y_pred)
+learning_rate = 0.01
+epochs = 2000
 
 
+# Build model 
 
-# Fitting Random Forest Classification to the Training set
-from sklearn.ensemble import RandomForestClassifier
-classifier = RandomForestClassifier(n_estimators = 100, criterion = 'entropy', random_state = 0)
-classifier.fit(X_train, y_train)
+hidden_1_layer = tf.add(tf.matmul(x, weights['hidden1']), biases['hidden1'])
+hidden_1_layer = tf.nn.dropout(tf.nn.relu(hidden_1_layer),keep_prob = 0.6)
+hidden_2_layer = tf.add(tf.matmul(hidden_1_layer, weights['hidden2']), biases['hidden2'])
+hidden_2_layer = tf.nn.dropout(tf.nn.relu(hidden_2_layer),keep_prob = 0.6)
+hidden_3_layer = tf.add(tf.matmul(hidden_2_layer, weights['hidden2']), biases['hidden2'])
+hidden_3_layer = tf.nn.dropout(tf.nn.relu(hidden_3_layer),keep_prob = 0.6)
 
-# Predicting the Test set results
-y_pred = classifier.predict(X_test)
+output_layer = tf.matmul(hidden_3_layer, weights['output']) + biases['output']
 
-# Making the Confusion Matrix
-from sklearn.metrics import confusion_matrix
-cm = confusion_matrix(y_test, y_pred)
 
-from sklearn.metrics import accuracy_score
-accuracy_score(y_test, y_pred)
+
+# Set loss function and goal i.e. minimize loss
+
+loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=output_layer, labels=y))
+opt = tf.train.AdamOptimizer(learning_rate)
+goal = opt.minimize(loss)
+
+
+prediction = tf.round(tf.nn.sigmoid(output_layer))
+correct = tf.cast(tf.equal(prediction, y), dtype=tf.float32)
+recall = tf.metrics.recall(labels = y, predictions = prediction)
+accuracy = tf.reduce_mean(correct)
+
+
+# Initialize lists to store loss and accuracy while training the model
+
+loss_trace = []
+train_acc = []
+dev_acc = []
 
 
 
 
 
+# Start tensorflow session
+
+init = tf.global_variables_initializer()
+sess = tf.Session()
+sess.run(init)
+sess.run(tf.local_variables_initializer())
+
+
+
+
+
+# training model
+
+
+for epoch in range(epochs):
+    sess.run(goal, feed_dict={x: X_train, y: np.matrix(y_train).T})
+    
+    # calculate results for epoch
+    
+    temp_loss = sess.run(loss, feed_dict={x: X_train, y: np.matrix(y_train).T})
+    temp_train_acc = sess.run(accuracy, feed_dict={x: X_train, y: np.matrix(y_train).T})
+   # temp_dev_acc = sess.run(accuracy, feed_dict={x: X_dev, y: np.matrix(y_dev).T})
+    
+    # save results in a list
+    
+    loss_trace.append(temp_loss)
+    train_acc.append(temp_train_acc)
+    #dev_acc.append(temp_dev_acc)
+    
+    # output
+    
+    if (epoch + 1) % 200 == 0:
+        print('epoch: {:4d} loss: {:5f} train_acc: {:5f} '.format(epoch + 1, temp_loss,
+                                                                          temp_train_acc))
+
+
+
+y_test_preds_nn = sess.run(prediction, feed_dict ={x: X_test})
+#y_dev_preds_nn = sess.run(prediction, feed_dict ={x: X_dev})
+
+sess.close()
 

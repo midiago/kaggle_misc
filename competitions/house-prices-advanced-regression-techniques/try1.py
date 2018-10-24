@@ -16,6 +16,39 @@ import pandas as pd
 dataset = pd.read_csv('test.csv')
 dataresult = pd.read_csv('sample_submission.csv')
 
+data_complete = pd.merge(dataset, dataresult, on='Id')
+
+
+
+data_complete.plot(kind='scatter',  x='MSSubClass', y='SalePrice')
+data_complete.plot(kind='scatter',  x='LotFrontage', y='SalePrice')
+data_complete.plot(kind='scatter',  x='LotArea', y='SalePrice')
+data_complete.plot(kind='scatter',  x='OverallQual', y='SalePrice')
+
+data_complete.plot(kind='scatter',  x='OverallCond', y='SalePrice')
+data_complete.plot(kind='scatter',  x='YearRemodAdd', y='SalePrice')
+data_complete.plot(kind='scatter',  x='MasVnrArea', y='SalePrice')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 X = dataset.iloc[:, :].values
 y = dataresult.iloc[:, 1].values
 

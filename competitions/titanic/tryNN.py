@@ -118,12 +118,33 @@ for dataset in full_dataset:
     dataset.loc[ dataset['Fare'] > 31, 'Fare'] = 3
     dataset['Fare'] = dataset['Fare'].astype(int)
 
+
+#for data in full_dataset:
+#    fare_oh = pd.get_dummies(data['Fare'])
+#    fare_oh = fare_oh.rename(columns = {0:'Fare_0', 1:'Fare_1', 2:'Fare_2', 3:'Fare_3' })
+##    data = data.join(fare_oh.drop(['Fare_0'], axis=1))
+#    data = data.join(fare_oh)
+
 # map the new features
 title_mapping = {"Mr": 1, "Miss": 2, "Mrs": 3, "Master": 4, "Rare": 5}
 family_mapping = {"Small": 0, "Alone": 1, "Big": 2}
 for dataset in full_dataset:
     dataset['Title'] = dataset['Title'].map(title_mapping)
     dataset['FamilySizeGroup'] = dataset['FamilySizeGroup'].map(family_mapping)
+    family_oh = pd.get_dummies(dataset['FamilySizeGroup'])
+    dataset = dataset.drop(dataset['FamilySizeGroup'])
+    dataset = dataset.join(family_oh)
+
+#for data in full_dataset:
+#    family_oh = pd.get_dummies(data['FamilySizeGroup'])
+#    family_oh = family_oh.rename(columns = {0:'FamilySizeGroup_0', 1:'FamilySizeGroup_1', 2:'FamilySizeGroup_2' })
+#    data = data.join(family_oh.drop(['FamilySizeGroup_0'], axis=1))
+#
+for data in full_dataset:
+    title_oh = pd.get_dummies(data['Title'])
+    title_oh = title_oh.rename(columns = { 1:'Title_1', 2:'Title_2', 3:'Title_3', 4:'Title_4', 5:'Title_5' })
+#    data = data.join(title_oh.drop(['Title_1'], axis=1))
+    data = data.join(title_oh)
 
 # engineer a new  features
 for dataset in full_dataset:
@@ -155,33 +176,51 @@ for data in full_dataset:
     #data['Cabin'].loc[~data['Cabin'].isnull()] = 1
     #data['Cabin'].loc[data['Cabin'].isnull()] = 0
 
+for data in full_dataset:
+    cabin_oh = pd.get_dummies(data['Cabin'])
+    cabin_oh = cabin_oh.rename(columns = {0:'cabin_0', 1:'cabin_1', 2:'cabin_2', 3:'cabin_3' })
+    data = data.join(cabin_oh.drop(['cabin_0'], axis=1))
+
+
+#
+#for data in full_dataset:
+#    port_oh = pd.get_dummies(data['Port'])
+#    port_oh = port_oh.rename(columns = {0:'Port_0', 1:'Port_1', 2:'Port_2', 3:'Port_3' })
+##    data = data.join(port_oh.drop(['Port_0'], axis=1))
+#    data = data.join(port_oh)
     
 # Delete Name column from datasets (No need for them in the analysis)
 del train_dataset['Name']
 del test_dataset['Name']
 
-del train_dataset['SibSp']
-del test_dataset['SibSp']
+#del train_dataset['SibSp']
+#del test_dataset['SibSp']
+#
+#del train_dataset['Parch']
+#del test_dataset['Parch']
 
-del train_dataset['Parch']
-del test_dataset['Parch']
-
-del train_dataset['FamilySize']
-del test_dataset['FamilySize']
+#del train_dataset['FamilySize']
+#del test_dataset['FamilySize']
 
 #del train_dataset['FamilySizeGroup']
 #del test_dataset['FamilySizeGroup']
-
-del train_dataset['Cabin']
-del test_dataset['Cabin']
+#
+#del train_dataset['Cabin']
+#del test_dataset['Cabin']
 
 # Delete Ticket column from datasets  (No need for them in the analysis)
 del train_dataset['Ticket']
 del test_dataset['Ticket']
 
-del train_dataset['Port']
-del test_dataset['Port']
+#del train_dataset['Port']
+#del test_dataset['Port']
 
+
+#del train_dataset['Title']
+#del test_dataset['Title']
+
+#del train_dataset['Fare']
+#del test_dataset['Fare']
 
 # Cabin has a lot of nan values, so i will remove it
 #del train_dataset['Cabin']
@@ -210,37 +249,6 @@ del train_dataset['PassengerId']
 X = train_dataset.drop("Survived",axis=1)
 y = train_dataset["Survived"]
 X_test  = test_dataset.drop("PassengerId",axis=1).copy()
-
-## Importing the dataset
-#dataset = train_dataset
-#
-#
-#X = dataset.iloc[:, [2, 4,5,6,7, 9,11]].values
-#y = dataset.iloc[:, 1].values
-#
-#
-#
-## Taking care of missing data
-#from sklearn.preprocessing import Imputer
-#imputer = Imputer(missing_values = np.nan, strategy = 'mean', axis = 0)
-#imputer = imputer.fit(X[:, 2].reshape(-1,1))
-#X[:, 2] = imputer.transform(X[:, 2].reshape(-1,1))[:,0]
-
-
-#
-##X[:,5] = np.array(['0'+''.join(i for i in x if i.isdigit()) for x in X[:,5]]).astype(int)
-## Encoding categorical data
-## Encoding the Independent Variables
-#from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-#labelencoder_X = LabelEncoder()
-#X[:, 1] = labelencoder_X.fit_transform(X[:, 1])
-#X[:, class_idx] = labelencoder_X.fit_transform(X[:, class_idx].astype('str'))
-#onehotencoder = OneHotEncoder(categorical_features = [class_idx])
-#X = onehotencoder.fit_transform(X).toarray()
-#onehotencoder = OneHotEncoder(categorical_features = [class_idx])
-#X = onehotencoder.fit_transform(X).toarray()
-#
-#X=X[:, 1:10]
 
 
 
@@ -281,7 +289,9 @@ y = tf.placeholder(dtype=tf.float32, shape=[None, 1])
 # number of neurons in each layer
 
 input_num_units = n
-hidden_num_units = 50
+hidden1_num_units = 30
+hidden2_num_units = 100
+hidden3_num_units = 20
 output_num_units = 1
 
 
@@ -289,16 +299,16 @@ output_num_units = 1
 # Build Neural Network Weights
 initializer = tf.contrib.layers.xavier_initializer()
 weights = {
-    'hidden1': tf.Variable(initializer([input_num_units, hidden_num_units])),
-    'hidden2': tf.Variable(initializer([hidden_num_units, hidden_num_units])),
-    'hidden3': tf.Variable(initializer([hidden_num_units, hidden_num_units])),
-    'output': tf.Variable(initializer([hidden_num_units, output_num_units])),
+    'hidden1': tf.Variable(initializer([input_num_units, hidden1_num_units])),
+    'hidden2': tf.Variable(initializer([hidden1_num_units, hidden2_num_units])),
+    'hidden3': tf.Variable(initializer([hidden2_num_units, hidden3_num_units])),
+    'output': tf.Variable(initializer([hidden3_num_units, output_num_units])),
 }
 
 biases = {
-    'hidden1': tf.Variable(initializer([hidden_num_units])),
-    'hidden2': tf.Variable(initializer([hidden_num_units])),
-    'hidden3': tf.Variable(initializer([hidden_num_units])),
+    'hidden1': tf.Variable(initializer([hidden1_num_units])),
+    'hidden2': tf.Variable(initializer([hidden2_num_units])),
+    'hidden3': tf.Variable(initializer([hidden3_num_units])),
     'output': tf.Variable(initializer([output_num_units])),
 }
 
@@ -307,7 +317,7 @@ biases = {
 # Set hyperparameters
 
 learning_rate = 0.01
-epochs = 2000
+epochs = 5000
 
 
 # Build model 
@@ -316,7 +326,7 @@ hidden_1_layer = tf.add(tf.matmul(x, weights['hidden1']), biases['hidden1'])
 hidden_1_layer = tf.nn.dropout(tf.nn.relu(hidden_1_layer),keep_prob = 0.6)
 hidden_2_layer = tf.add(tf.matmul(hidden_1_layer, weights['hidden2']), biases['hidden2'])
 hidden_2_layer = tf.nn.dropout(tf.nn.relu(hidden_2_layer),keep_prob = 0.6)
-hidden_3_layer = tf.add(tf.matmul(hidden_2_layer, weights['hidden2']), biases['hidden2'])
+hidden_3_layer = tf.add(tf.matmul(hidden_2_layer, weights['hidden3']), biases['hidden3'])
 hidden_3_layer = tf.nn.dropout(tf.nn.relu(hidden_3_layer),keep_prob = 0.6)
 
 output_layer = tf.matmul(hidden_3_layer, weights['output']) + biases['output']
